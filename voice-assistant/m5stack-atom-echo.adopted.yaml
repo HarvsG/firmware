@@ -4,9 +4,6 @@ esphome:
   friendly_name: M5Stack Atom Echo
   min_version: 2024.9.0
   name_add_mac_suffix: true
-  project:
-    name: m5stack.atom-echo-voice-assistant
-    version: "24.7.24"
 
 esp32:
   board: m5stack-atom
@@ -19,32 +16,9 @@ api:
 ota:
   - platform: esphome
     id: ota_esphome
-  - platform: http_request
-    id: ota_http_request
-
-update:
-  - platform: http_request
-    id: update_http_request
-    name: Firmware
-    source: https://firmware.esphome.io/voice-assistant/m5stack-atom-echo/manifest.json
-
-http_request:
-
-dashboard_import:
-  package_import_url: github://esphome/firmware/voice-assistant/m5stack-atom-echo.adopted.yaml@main
 
 wifi:
-  on_connect:
-    - delay: 5s  # Gives time for improv results to be transmitted
-    - ble.disable:
-  on_disconnect:
-    - ble.enable:
   ap:
-
-improv_serial:
-
-esp32_improv:
-  authorizer: none
 
 button:
   - platform: safe_mode
@@ -73,14 +47,6 @@ speaker:
     i2s_dout_pin: GPIO22
     dac_type: external
     channel: mono
-
-text_sensor:
-  - platform: template
-    name: "media player"
-    id: "media_player"
-    lambda: |-
-      return {"media_player.study_speaker"};
-    update_interval: 60s
 
 voice_assistant:
   id: va
@@ -112,14 +78,6 @@ voice_assistant:
         green: 0%
         brightness: 100%
         effect: none
-  on_tts_end:
-     - homeassistant.service:
-         service: media_player.play_media
-         data:
-           entity_id: !lambda 'return media_player.state;' # <- change this
-           media_content_id: !lambda 'return x;'
-           media_content_type: music
-           announce: "false"
   on_end:
     - delay: 100ms
     - wait_until:
@@ -167,22 +125,7 @@ voice_assistant:
         condition:
           switch.is_on: timer_ringing
         then:
-          - if:
-              condition:
-                not:
-                  media_player.state:
-                  id: my_text_sensor
-                  state: ''
-              then:
-                - homeassistant.service:
-                  service: media_player.play_media
-                  data:
-                    entity_id: !lambda 'return media_player.state;' # <- change this
-                    media_content_id: https://github.com/esphome/firmware/raw/main/voice-assistant/sounds/timer_finished.wav
-                    media_content_type: music
-                    announce: "false"
-              else:
-                - lambda: id(echo_speaker).play(id(timer_finished_wave_file), sizeof(id(timer_finished_wave_file)));
+          - lambda: id(echo_speaker).play(id(timer_finished_wave_file), sizeof(id(timer_finished_wave_file)));
           - delay: 1s
     - wait_until:
         not:
